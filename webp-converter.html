@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Converter to WEBP</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --text-primary: #e6edf3;
+            --text-secondary: #7d8590;
+            --accent: #58a6ff;
+            --accent-hover: #1f6feb;
+            --border: #30363d;
+            --shadow: rgba(0, 0, 0, 0.5);
+        }
+
+        body.theme-purple {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-tertiary: #0f3460;
+            --text-primary: #eee;
+            --text-secondary: #aaa;
+            --accent: #e94560;
+            --accent-hover: #c73649;
+            --border: #2a2a3e;
+            --shadow: rgba(0, 0, 0, 0.5);
+        }
+
+        body.theme-green {
+            --bg-primary: #0a0e0d;
+            --bg-secondary: #0d1b16;
+            --bg-tertiary: #1b2d27;
+            --text-primary: #e8f5e9;
+            --text-secondary: #81c784;
+            --accent: #4caf50;
+            --accent-hover: #388e3c;
+            --border: #1e3a2f;
+            --shadow: rgba(0, 0, 0, 0.5);
+        }
+
+        body.theme-amber {
+            --bg-primary: #1a1510;
+            --bg-secondary: #2a1f17;
+            --bg-tertiary: #3a2a1f;
+            --text-primary: #fff8e1;
+            --text-secondary: #ffb74d;
+            --accent: #ff9800;
+            --accent-hover: #f57c00;
+            --border: #3d2817;
+            --shadow: rgba(0, 0, 0, 0.5);
+        }
+
+        body.light {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f6f8fa;
+            --bg-tertiary: #eaeef2;
+            --text-primary: #1f2328;
+            --text-secondary: #656d76;
+            --accent: #0969da;
+            --accent-hover: #0550ae;
+            --border: #d1d9e0;
+            --shadow: rgba(0, 0, 0, 0.12);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            padding: 0;
+            margin: 0;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .container {
+            min-width: 600px;
+            margin: 0 auto;
+            width: 100%;
+            padding: 20px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            gap: 20px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 10px;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 600;
+        }
+
+        .theme-toggle {
+            background: var(--bg-secondary);
+            border: 2px solid var(--border);
+            color: var(--text-primary);
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle:hover {
+            background: var(--bg-tertiary);
+            transform: translateY(-2px);
+        }
+
+        .theme-select {
+            background: var(--bg-secondary);
+            border: 2px solid var(--border);
+            color: var(--text-primary);
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .theme-select:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .fullscreen-btn {
+            background: var(--bg-secondary);
+            border: 2px solid var(--border);
+            color: var(--text-primary);
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .fullscreen-btn:hover {
+            background: var(--bg-tertiary);
+            transform: translateY(-2px);
+        }
+
+        .filename {
+            background: var(--bg-secondary);
+            padding: 8px 15px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            text-align: center;
+            font-weight: 500;
+            border: none;
+            min-height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 14px;
+        }
+
+        .viewer-container {
+            display: flex;
+            gap: 0;
+            margin-bottom: 10px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid var(--border);
+            flex: 1;
+            min-height: 400px;
+        }
+
+        .image-panel {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background: var(--bg-tertiary);
+        }
+
+        .image-wrapper {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            cursor: grab;
+            position: relative;
+        }
+
+        .image-wrapper:active {
+            cursor: grabbing;
+        }
+
+        .image-wrapper img {
+            position: absolute;
+            transform-origin: 0 0;
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+
+        .zoom-panel {
+            width: 60px;
+            background: var(--bg-secondary);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            padding: 20px 0;
+            border-left: 2px solid var(--border);
+            border-right: 2px solid var(--border);
+        }
+
+        .zoom-btn {
+            background: var(--accent);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .zoom-btn:hover {
+            background: var(--accent-hover);
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+
+        .zoom-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .size-info {
+            padding: 8px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-secondary);
+            border-radius: 6px;
+            margin-bottom: 10px;
+            border: none;
+            flex-shrink: 0;
+            font-size: 13px;
+        }
+
+        .size-label {
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .controls {
+            background: var(--bg-secondary);
+            padding: 10px 15px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            border: none;
+            flex-shrink: 0;
+        }
+
+        .control-row {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 0;
+        }
+
+        .quality-control {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .quality-label {
+            font-weight: 600;
+            min-width: 60px;
+            font-size: 13px;
+        }
+
+        input[type="range"] {
+            flex: 1;
+            height: 8px;
+            border-radius: 5px;
+            background: var(--bg-tertiary);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--accent);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--accent);
+            cursor: pointer;
+            border: none;
+        }
+
+        .quality-value {
+            font-weight: 700;
+            min-width: 45px;
+            color: var(--accent);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .select-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        select {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 2px solid var(--border);
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 20px;
+            flex-shrink: 0;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-load {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-load:hover:not(:disabled) {
+            background: var(--accent-hover);
+        }
+
+        .btn-save {
+            background: #238636;
+            color: white;
+        }
+
+        .btn-save:hover:not(:disabled) {
+            background: #2ea043;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px var(--shadow);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            font-size: 18px;
+        }
+
+        .fps-label {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            color: #ff4444;
+            z-index: 10;
+            pointer-events: none;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .info-btn {
+            margin-top: auto;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-secondary);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-size: 28px;
+            cursor: pointer;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .modal-close:hover {
+            background: var(--bg-tertiary);
+            transform: rotate(90deg);
+        }
+
+        .modal-content h2 {
+            margin: 0 0 20px 0;
+            color: var(--accent);
+            font-size: 28px;
+        }
+
+        .modal-content h3 {
+            margin: 20px 0 10px 0;
+            color: var(--text-primary);
+            font-size: 18px;
+        }
+
+        .modal-content p {
+            margin: 10px 0;
+            line-height: 1.6;
+            color: var(--text-secondary);
+        }
+
+        .modal-content ul {
+            margin: 10px 0;
+            padding-left: 25px;
+            color: var(--text-secondary);
+            line-height: 1.8;
+        }
+
+        .modal-content ul li {
+            margin: 5px 0;
+        }
+
+        .modal-content .feature-list {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .modal-content .feature-list li:before {
+            content: "✓ ";
+            color: var(--accent);
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        .modal-footer {
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .modal-footer strong {
+            color: var(--text-primary);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <h1>Image Converter to WEBP</h1>
+            </div>
+            <div class="header-right">
+                <select class="theme-select" id="themeSelect" onchange="changeTheme()">
+                    <option value="dark">Dark (Blue)</option>
+                    <option value="theme-purple">Dark (Purple)</option>
+                    <option value="theme-green">Dark (Green)</option>
+                    <option value="theme-amber">Dark (Amber)</option>
+                    <option value="light">Light</option>
+                </select>
+                <button class="fullscreen-btn" onclick="toggleFullscreen()">⛶ Fullscreen</button>
+            </div>
+        </div>
+
+        <div class="filename" id="filename">No file selected</div>
+
+        <div class="viewer-container">
+            <div class="image-panel">
+                <div class="image-wrapper" id="originalWrapper">
+                    <div class="placeholder">Original Image</div>
+                </div>
+            </div>
+
+            <div class="zoom-panel">
+                <button class="zoom-btn" onclick="zoomIn()">+</button>
+                <div class="zoom-label" id="zoomLabel">100%</div>
+                <button class="zoom-btn" onclick="zoomOut()">-</button>
+                <button class="zoom-btn info-btn" onclick="toggleInfo()">?</button>
+            </div>
+
+            <div class="image-panel">
+                <div class="image-wrapper" id="convertedWrapper">
+                    <div class="placeholder">Converted WEBP</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="size-info">
+            <div class="size-label">Original Size: <span id="originalSize">-</span></div>
+            <div class="control-row" style="margin-bottom: 0;">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="lossless" onchange="convertImage()">
+                    <label for="lossless">Lossless</label>
+                </div>
+            </div>
+            <div class="size-label">Estimated Size: <span id="convertedSize">-</span></div>
+        </div>
+
+        <div class="controls">
+            <div class="quality-control">
+                <span class="quality-label">Quality:</span>
+                <input type="range" id="quality" min="0" max="100" value="80" oninput="updateQuality()">
+                <span class="quality-value" id="qualityValue">80%</span>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <button class="btn btn-load" onclick="document.getElementById('fileInput').click()">
+                📁 Load Image
+            </button>
+            <button class="btn btn-save" id="saveBtn" onclick="saveImage()" disabled>
+                💾 Save Image
+            </button>
+        </div>
+
+        <input type="file" id="fileInput" accept="image/*" onchange="loadImage(event)">
+
+        <div class="modal" id="infoModal" onclick="closeModalOnBackdrop(event)">
+            <div class="modal-content">
+                <button class="modal-close" onclick="toggleInfo()">×</button>
+                <h2>Image Converter to WEBP</h2>
+                
+                <p>A powerful and intuitive web-based tool for converting images to the modern WEBP format with real-time preview and quality adjustment.</p>
+                
+                <h3>Key Features</h3>
+                <ul class="feature-list">
+                    <li>Side-by-side comparison of original and converted images</li>
+                    <li>Real-time conversion with FPS counter</li>
+                    <li>Adjustable quality slider (0-100%)</li>
+                    <li>Lossless compression option</li>
+                    <li>Synchronized zoom and pan controls</li>
+                    <li>File size comparison</li>
+                    <li>Multiple dark themes and light mode</li>
+                    <li>Fullscreen mode support</li>
+                    <li>Responsive adaptive layout</li>
+                </ul>
+                
+                <h3>Supported Input Formats</h3>
+                <ul>
+                    <li>JPEG / JPG</li>
+                    <li>PNG</li>
+                    <li>BMP</li>
+                    <li>GIF</li>
+                    <li>TIFF</li>
+                    <li>WebP</li>
+                    <li>SVG</li>
+                    <li>ICO</li>
+                    <li>And other formats supported by modern browsers</li>
+                </ul>
+                
+                <h3>How to Use</h3>
+                <ul>
+                    <li><strong>Load Image:</strong> Click "Load Image" button to select a file</li>
+                    <li><strong>Adjust Quality:</strong> Use the quality slider to find the perfect balance between file size and image quality</li>
+                    <li><strong>Lossless Mode:</strong> Enable for maximum quality preservation</li>
+                    <li><strong>Zoom & Pan:</strong> Use +/- buttons to zoom, drag images to compare details</li>
+                    <li><strong>Save:</strong> Click "Save Image" to download the converted WEBP file</li>
+                </ul>
+                
+                <h3>Why WEBP?</h3>
+                <p>WEBP is a modern image format that provides superior compression for images on the web. It supports both lossy and lossless compression, transparency, and animation. WEBP images are typically 25-35% smaller than JPEG and PNG images at equivalent quality.</p>
+                
+                <div class="modal-footer">
+                    <p><strong>Created by:</strong> Osidach Vitaliy</p>
+                    <p><strong>AI Assistant:</strong> Claude Sonnet 4.5 (Anthropic)</p>
+                    <p><strong>Year:</strong> 2025</p>
+                    <p><strong>Technology:</strong> Pure HTML5, CSS3, JavaScript with Canvas API</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let originalImage = null;
+        let convertedBlob = null;
+        let convertedURL = null;
+        let zoom = 1;
+        let panX = 0, panY = 0;
+        let isDragging = false;
+        let startX = 0, startY = 0;
+        let activeWrapper = null;
+        let conversionStartTime = 0;
+
+        function changeTheme() {
+            const theme = document.getElementById('themeSelect').value;
+            document.body.className = theme === 'dark' ? '' : theme;
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        function toggleInfo() {
+            const modal = document.getElementById('infoModal');
+            modal.classList.toggle('active');
+        }
+
+        function closeModalOnBackdrop(event) {
+            if (event.target === event.currentTarget) {
+                toggleInfo();
+            }
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
+        }
+
+        function loadImage(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            document.getElementById('filename').textContent = file.name;
+            document.getElementById('originalSize').textContent = formatFileSize(file.size);
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                originalImage = new Image();
+                originalImage.onload = function() {
+                    displayOriginalImage();
+                    convertImage();
+                };
+                originalImage.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function displayOriginalImage() {
+            const wrapper = document.getElementById('originalWrapper');
+            wrapper.innerHTML = '';
+            const img = originalImage.cloneNode();
+            img.style.transform = `scale(${zoom}) translate(${panX}px, ${panY}px)`;
+            wrapper.appendChild(img);
+            setupPanning();
+        }
+
+        function convertImage() {
+            if (!originalImage) return;
+
+            conversionStartTime = performance.now();
+
+            const canvas = document.createElement('canvas');
+            canvas.width = originalImage.width;
+            canvas.height = originalImage.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(originalImage, 0, 0);
+
+            const quality = document.getElementById('quality').value / 100;
+            const lossless = document.getElementById('lossless').checked;
+
+            // For lossless, we need to use quality = 1.0 and rely on browser implementation
+            const webpQuality = lossless ? 1.0 : quality;
+
+            // Convert to WebP
+            canvas.toBlob(function(blob) {
+                if (!blob) {
+                    console.error('Failed to convert image');
+                    return;
+                }
+                
+                const conversionTime = performance.now() - conversionStartTime;
+                const fps = 1000 / conversionTime;
+                
+                convertedBlob = blob;
+                document.getElementById('convertedSize').textContent = formatFileSize(blob.size);
+                document.getElementById('saveBtn').disabled = false;
+
+                // Clean up old URL
+                if (convertedURL) {
+                    URL.revokeObjectURL(convertedURL);
+                }
+                
+                convertedURL = URL.createObjectURL(blob);
+                
+                // Preload image before displaying
+                const tempImg = new Image();
+                tempImg.onload = function() {
+                    const wrapper = document.getElementById('convertedWrapper');
+                    wrapper.innerHTML = '';
+                    
+                    // Add FPS label
+                    const fpsLabel = document.createElement('div');
+                    fpsLabel.className = 'fps-label';
+                    fpsLabel.textContent = fps.toFixed(1) + ' fps';
+                    wrapper.appendChild(fpsLabel);
+                    
+                    const img = tempImg.cloneNode();
+                    img.style.transform = `scale(${zoom}) translate(${panX}px, ${panY}px)`;
+                    wrapper.appendChild(img);
+                    
+                    setupPanning();
+                };
+                tempImg.onerror = function() {
+                    console.error('Failed to load converted image');
+                };
+                tempImg.src = convertedURL;
+            }, 'image/webp', webpQuality);
+        }
+
+        function updateQuality() {
+            const value = document.getElementById('quality').value;
+            document.getElementById('qualityValue').textContent = value + '%';
+            convertImage();
+        }
+
+        function zoomIn() {
+            zoom = Math.min(zoom + 0.1, 5);
+            updateZoom();
+        }
+
+        function zoomOut() {
+            zoom = Math.max(zoom - 0.1, 0.1);
+            updateZoom();
+        }
+
+        function resetZoom() {
+            zoom = 1;
+            panX = 0;
+            panY = 0;
+            updateZoom();
+        }
+
+        function updateZoom() {
+            document.getElementById('zoomLabel').textContent = Math.round(zoom * 100) + '%';
+            
+            constrainPan();
+            
+            const originalWrapper = document.getElementById('originalWrapper');
+            const convertedWrapper = document.getElementById('convertedWrapper');
+            
+            const originalImg = originalWrapper.querySelector('img');
+            const convertedImg = convertedWrapper.querySelector('img');
+            
+            if (originalImg) {
+                originalImg.style.transform = `scale(${zoom}) translate(${panX}px, ${panY}px)`;
+            }
+            if (convertedImg) {
+                convertedImg.style.transform = `scale(${zoom}) translate(${panX}px, ${panY}px)`;
+            }
+        }
+
+        function setupPanning() {
+            const wrappers = [
+                document.getElementById('originalWrapper'),
+                document.getElementById('convertedWrapper')
+            ];
+
+            wrappers.forEach(wrapper => {
+                wrapper.removeEventListener('mousedown', startPan);
+                wrapper.addEventListener('mousedown', startPan);
+            });
+
+            // Add global listeners for mouse move and up
+            document.removeEventListener('mousemove', pan);
+            document.removeEventListener('mouseup', endPan);
+            document.removeEventListener('mouseleave', handleMouseLeave);
+            document.addEventListener('mousemove', pan);
+            document.addEventListener('mouseup', endPan);
+            document.addEventListener('mouseleave', handleMouseLeave);
+        }
+
+        function handleMouseLeave(e) {
+            // Check if mouse left the document/window
+            if (e.clientY <= 0 || e.clientX <= 0 || 
+                e.clientX >= window.innerWidth || e.clientY >= window.innerHeight) {
+                endPan();
+            }
+        }
+
+        function constrainPan() {
+            if (!originalImage) return;
+
+            const wrapper = document.getElementById('originalWrapper');
+            const wrapperRect = wrapper.getBoundingClientRect();
+            
+            const imgWidth = originalImage.width * zoom;
+            const imgHeight = originalImage.height * zoom;
+            
+            const wrapperWidth = wrapperRect.width;
+            const wrapperHeight = wrapperRect.height;
+
+            // If image is larger than wrapper
+            if (imgWidth > wrapperWidth) {
+                // Max pan is 0 (image left edge at wrapper left edge)
+                // Min pan is when image right edge is at wrapper right edge
+                const minPanX = -(imgWidth - wrapperWidth) / zoom;
+                panX = Math.max(minPanX, Math.min(0, panX));
+            } else {
+                // Center the image
+                panX = (wrapperWidth - imgWidth) / (2 * zoom);
+            }
+
+            if (imgHeight > wrapperHeight) {
+                // Max pan is 0 (image top edge at wrapper top edge)
+                // Min pan is when image bottom edge is at wrapper bottom edge
+                const minPanY = -(imgHeight - wrapperHeight) / zoom;
+                panY = Math.max(minPanY, Math.min(0, panY));
+            } else {
+                // Center the image
+                panY = (wrapperHeight - imgHeight) / (2 * zoom);
+            }
+        }
+
+        function startPan(e) {
+            isDragging = true;
+            activeWrapper = e.currentTarget;
+            startX = e.clientX;
+            startY = e.clientY;
+            e.preventDefault();
+        }
+
+        function pan(e) {
+            if (!isDragging || !activeWrapper) return;
+            
+            const deltaX = (e.clientX - startX) / zoom;
+            const deltaY = (e.clientY - startY) / zoom;
+            
+            panX += deltaX;
+            panY += deltaY;
+            
+            startX = e.clientX;
+            startY = e.clientY;
+            
+            constrainPan();
+            updateZoom();
+            
+            e.preventDefault();
+        }
+
+        function endPan() {
+            isDragging = false;
+            activeWrapper = null;
+        }
+
+        function saveImage() {
+            if (!convertedBlob) return;
+
+            const url = URL.createObjectURL(convertedBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'converted.webp';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
